@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Summer — Certificate Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --accent: #00f5c4;
+    --accent2: #7c3aed;
+    --accent3: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --border: #1e2d45;
+    --danger: #ef4444;
+    --success: #10b981;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,196,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* Header */
+  header {
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .header-inner { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px; }
+
+  .title-block {}
+  .eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Progress bar */
+  .master-progress {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 40px;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .progress-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .progress-pct { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--accent); }
+
+  .progress-track {
+    height: 8px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 999px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 32px;
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .tab-btn.active {
+    background: var(--accent2);
+    color: #fff;
+  }
+
+  .tab-btn:hover:not(.active) {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  /* Tab panels */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Week cards */
+  .week-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .week-card:hover { border-color: var(--accent2); }
+  .week-card.complete { border-color: var(--accent); }
+
+  .week-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .week-meta { display: flex; align-items: center; gap: 16px; }
+
+  .week-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    background: rgba(0,245,196,0.08);
+    border: 1px solid rgba(0,245,196,0.2);
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .week-title { font-size: 16px; font-weight: 600; }
+
+  .week-hours {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .week-toggle {
+    font-size: 18px;
+    color: var(--muted);
+    transition: transform 0.3s;
+  }
+
+  .week-card.open .week-toggle { transform: rotate(180deg); }
+
+  .week-progress-mini {
+    height: 3px;
+    background: var(--border);
+  }
+
+  .week-progress-mini-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    transition: width 0.4s;
+  }
+
+  .week-body {
+    display: none;
+    padding: 0 24px 24px;
+  }
+
+  .week-card.open .week-body { display: block; }
+
+  .week-info {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    line-height: 1.6;
+  }
+
+  .task-list { list-style: none; }
+
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .task-item:last-child { border-bottom: none; }
+  .task-item.done { opacity: 0.5; }
+
+  .task-check {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-top: 2px;
+  }
+
+  .task-item.done .task-check {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+
+  .task-text { font-size: 14px; flex: 1; }
+  .task-text.done { text-decoration: line-through; }
+
+  .task-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+
+  .tag-video { background: rgba(124,58,237,0.2); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+  .tag-lab { background: rgba(0,245,196,0.1); color: var(--accent); border: 1px solid rgba(0,245,196,0.2); }
+  .tag-quiz { background: rgba(245,158,11,0.1); color: var(--accent3); border: 1px solid rgba(245,158,11,0.3); }
+  .tag-reading { background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  .tag-portfolio { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+
+  /* Journal tab */
+  .journal-area {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .journal-entry-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .journal-entry-form h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--accent);
+  }
+
+  .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
+
+  .form-group label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .form-group input, .form-group select, .form-group textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent2);
+  }
+
+  .form-group textarea { resize: vertical; min-height: 80px; }
+
+  .form-group select option { background: var(--surface2); }
+
+  .btn-save {
+    background: var(--accent2);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: opacity 0.2s;
+  }
+
+  .btn-save:hover { opacity: 0.85; }
+
+  .journal-entries { display: flex; flex-direction: column; gap: 12px; }
+
+  .journal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+  }
+
+  .journal-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .journal-date {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  .journal-week-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--surface2);
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  .journal-mood {
+    font-size: 20px;
+  }
+
+  .journal-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .delete-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+
+  .delete-btn:hover { opacity: 1; color: var(--danger); }
+
+  .no-entries {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+  }
+
+  /* Overview tab */
+  .overview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 640px) { .overview-grid { grid-template-columns: 1fr; } }
+
+  .overview-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .overview-card h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .course-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .course-pill:last-child { border-bottom: none; }
+
+  .course-pill-name { flex: 1; }
+  .course-pill-hours {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: 12px;
+  }
+
+  .course-pill-status {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    margin-left: 10px;
+    flex-shrink: 0;
+  }
+
+  .course-pill-status.done { background: var(--accent); }
+  .course-pill-status.partial { background: var(--accent3); }
+
+  .tip-box {
+    background: rgba(0,245,196,0.05);
+    border: 1px solid rgba(0,245,196,0.15);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+
+  .tip-box h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .tip-box p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .week-card { animation: fadeIn 0.4s ease both; }
+  .week-card:nth-child(2) { animation-delay: 0.05s; }
+  .week-card:nth-child(3) { animation-delay: 0.1s; }
+  .week-card:nth-child(4) { animation-delay: 0.15s; }
+  .week-card:nth-child(5) { animation-delay: 0.2s; }
+
+  .checkmark-svg {
+    width: 12px; height: 12px;
+    stroke: #000;
+    stroke-width: 3;
+    fill: none;
+    display: none;
+  }
+
+  .task-item.done .checkmark-svg { display: block; }
+
+  footer {
+    margin-top: 60px;
+    padding: 24px 0;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  /* Export / Import bar */
+  .sync-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .sync-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .sync-label span { color: var(--accent); }
+
+  .btn-export {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .btn-export:hover { background: var(--accent); color: #000; }
+
+  .btn-import {
+    background: transparent;
+    border: 1px solid var(--accent2);
+    color: #a78bfa;
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .btn-import:hover { background: var(--accent2); color: #fff; }
+
+  .import-file-input { display: none; }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--accent);
+    color: #000;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    padding: 12px 24px;
+    border-radius: 999px;
+    letter-spacing: 1px;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 999;
+    pointer-events: none;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-inner">
+      <div class="title-block">
+        <div class="eyebrow">// Summer 2026 — Certification Track</div>
+        <h1>Cyber<span>Summer</span></h1>
+        <div class="subtitle">Google Cybersecurity Professional Certificate · 133 hrs · 12 Weeks</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sync Bar -->
+  <div class="sync-bar">
+    <div class="sync-label">// <span>Save File</span> — export your progress, import on any computer</div>
+    <button class="btn-export" onclick="exportData()">⬇ EXPORT SAVE</button>
+    <button class="btn-import" onclick="document.getElementById('importInput').click()">⬆ IMPORT SAVE</button>
+    <input class="import-file-input" type="file" id="importInput" accept=".json" onchange="importData(event)">
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-card">
+      <div class="stat-label">Tasks Done</div>
+      <div class="stat-value" id="statDone">0</div>
+      <div class="stat-sub" id="statTotal">of 0 total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Hours Logged</div>
+      <div class="stat-value" id="statHours">0</div>
+      <div class="stat-sub">of 133 hrs</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Current Week</div>
+      <div class="stat-value" id="statWeek">1</div>
+      <div class="stat-sub">of 12 weeks</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Journal Entries</div>
+      <div class="stat-value" id="statEntries">0</div>
+      <div class="stat-sub">documented</div>
+    </div>
+  </div>
+
+  <!-- Master Progress -->
+  <div class="master-progress">
+    <div class="progress-header">
+      <div class="progress-title">Overall Certificate Progress</div>
+      <div class="progress-pct" id="progressPct">0%</div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('schedule')">📅 Schedule</button>
+    <button class="tab-btn" onclick="switchTab('overview')">🗺 Overview</button>
+    <button class="tab-btn" onclick="switchTab('journal')">📓 Journal</button>
+  </div>
+
+  <!-- SCHEDULE TAB -->
+  <div class="tab-panel active" id="tab-schedule">
+    <div id="weekCards"></div>
+  </div>
+
+  <!-- OVERVIEW TAB -->
+  <div class="tab-panel" id="tab-overview">
+    <div class="overview-grid">
+      <div class="overview-card">
+        <h3>Course Breakdown</h3>
+        <div id="courseList"></div>
+      </div>
+      <div class="overview-card">
+        <h3>Weekly Commitment</h3>
+        <div id="weeklyCommitment"></div>
+      </div>
+    </div>
+    <div class="tip-box">
+      <h3>// Study Tips for 9th Grade</h3>
+      <p>
+        📺 <strong>Watch on 1.5x speed</strong> — saves ~30% of your video time without losing comprehension.<br><br>
+        🧪 <strong>Don't skip labs</strong> — hands-on practice with Linux, Python, and SQL is what employers actually want.<br><br>
+        📁 <strong>Save every portfolio activity</strong> — Course 8 tells you to compile them, so build that habit now.<br><br>
+        🔗 <strong>Add each cert to LinkedIn as you finish</strong> — recruiters notice credentials added over time.<br><br>
+        💬 <strong>Join the Coursera discussion forums</strong> — other learners often share tips and answer questions fast.<br><br>
+        🎯 <strong>After this cert:</strong> CompTIA Security+ is the natural next step and this course prepares you for it directly.
+      </p>
+    </div>
+  </div>
+
+  <!-- JOURNAL TAB -->
+  <div class="tab-panel" id="tab-journal">
+    <div class="journal-area">
+      <div class="journal-entry-form">
+        <h3>// Log Your Progress</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="journalDate">
+          </div>
+          <div class="form-group">
+            <label>Week</label>
+            <select id="journalWeek">
+              <option value="Week 1">Week 1</option><option value="Week 2">Week 2</option>
+              <option value="Week 3">Week 3</option><option value="Week 4">Week 4</option>
+              <option value="Week 5">Week 5</option><option value="Week 6">Week 6</option>
+              <option value="Week 7">Week 7</option><option value="Week 8">Week 8</option>
+              <option value="Week 9">Week 9</option><option value="Week 10">Week 10</option>
+              <option value="Week 11">Week 11</option><option value="Week 12">Week 12</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Mood</label>
+            <select id="journalMood">
+              <option value="🔥">🔥 Crushing it</option>
+              <option value="💪">💪 Solid progress</option>
+              <option value="😐">😐 Okay day</option>
+              <option value="😤">😤 Struggled but kept going</option>
+              <option value="🧠">🧠 Lots learned</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>What did you study / accomplish today?</label>
+          <textarea id="journalText" placeholder="e.g. Finished Course 1 Module 2, learned about SIEM tools, did the network security lab..."></textarea>
+        </div>
+        <button class="btn-save" onclick="saveEntry()">SAVE ENTRY</button>
+      </div>
+      <div class="journal-entries" id="journalEntries">
+        <div class="no-entries" id="noEntries">No entries yet. Start logging your journey! 🚀</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>CYBER SUMMER 2026 · BUILT FOR YOUR CERTIFICATION JOURNEY · GOOGLE CYBERSECURITY CERT</footer>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const courses = [
+  { name: "Foundations of Cybersecurity", hours: 10 },
+  { name: "Play It Safe: Manage Security Risks", hours: 9 },
+  { name: "Connect and Protect: Networks & Network Security", hours: 12 },
+  { name: "Tools of the Trade: Linux and SQL", hours: 23 },
+  { name: "Assets, Threats, and Vulnerabilities", hours: 19 },
+  { name: "Sound the Alarm: Detection and Response", hours: 18 },
+  { name: "Automate Cybersecurity Tasks with Python", hours: 25 },
+  { name: "Put It to Work: Prepare for Cybersecurity Jobs", hours: 11 },
+  { name: "Accelerate Your Job Search with AI", hours: 6 },
+];
+
+const weeks = [
+  {
+    week: 1, dates: "June 9–15", course: "Course 1", hours: 10, commitment: "~1.5 hrs/day",
+    info: "Start strong! Course 1 is the shortest at 10 hrs. Get familiar with the Coursera interface, take notes, and set a daily routine.",
+    tasks: [
+      { text: "Enroll in Google Cybersecurity Certificate on Coursera", tag: "reading" },
+      { text: "Watch: Course 1 — Foundations of Cybersecurity (all videos)", tag: "video" },
+      { text: "Complete: Module 1 quiz — Intro to Cybersecurity", tag: "quiz" },
+      { text: "Complete: Module 2 quiz — Core Security Concepts", tag: "quiz" },
+      { text: "Complete: Module 3 quiz — Security Ethics", tag: "quiz" },
+      { text: "Complete: Module 4 quiz — Cybersecurity Tools", tag: "quiz" },
+      { text: "Complete: Course 1 Portfolio Activity — Professional Statement", tag: "portfolio" },
+      { text: "Write Week 1 journal entry", tag: "reading" },
+    ]
+  },
+  {
+    week: 2, dates: "June 16–22", course: "Course 2", hours: 9, commitment: "~1.3 hrs/day",
+    info: "Course 2 covers risk management and SIEM tools. This is foundational for the finance/IT intersection you're interested in.",
+    tasks: [
+      { text: "Watch: Course 2 — Play It Safe (all videos)", tag: "video" },
+      { text: "Study: NIST Cybersecurity Framework overview", tag: "reading" },
+      { text: "Complete: Module 1 quiz — Security Risks", tag: "quiz" },
+      { text: "Complete: Module 2 quiz — Security Frameworks & Controls", tag: "quiz" },
+      { text: "Complete: Module 3 quiz — SIEM Tools Introduction", tag: "quiz" },
+      { text: "Complete: Module 4 quiz — Playbooks & Incident Response", tag: "quiz" },
+      { text: "Complete: Course 2 Portfolio Activity — Security Audit", tag: "portfolio" },
+      { text: "Write Week 2 journal entry", tag: "reading" },
+    ]
+  },
+  {
+    week: 3, dates: "June 23–29", course: "Course 3", hours: 12, commitment: "~1.7 hrs/day",
+    info: "Networks! This is heavier at 12 hours. Learn TCP/IP, VPNs, and firewalls — all critical for hardware/infrastructure careers.",
+    tasks: [
+      { text: "Watch: Course 3 — Networks & Network Security (Part 1: Network architecture)", tag: "video" },
+      { text: "Watch: Course 3 — Networks & Network Security (Part 2: Network operations)", tag: "video" },
+      { text: "Watch: Course 3 — Networks & Network Security (Part 3: Network attacks)", tag: "video" },
+      { text: "Watch: Course 3 — Networks & Network Security (Part 4: Security hardening)", tag: "video" },
+      { text: "Complete: All Module quizzes for Course 3", tag: "quiz" },
+      { text: "Complete: Course 3 Portfolio Activity — Network Hardening Analysis", tag: "portfolio" },
+      { text: "Research: What is CompTIA Network+? (your next goal after this cert)", tag: "reading" },
+      { text: "Write Week 3 journal entry", tag: "reading" },
+    ]
+  },
+  {
+    week: 4, dates: "June 30–July 6", course: "Course 4 (Part 1)", hours: 12, commitment: "~1.7 hrs/day",
+    info: "Course 4 is the longest at 23 hrs — split it over 2 weeks. This week: Linux. You'll actually use a terminal, which is super valuable.",
+    tasks: [
+      { text: "Watch: Course 4 — Linux and SQL (Part 1: Operating systems overview)", tag: "video" },
+      { text: "Watch: Course 4 — Linux and SQL (Part 2: The Linux OS)", tag: "video" },
+      { text: "Lab: Practice Linux commands in Coursera sandbox", tag: "lab" },
+      { text: "Lab: Navigate file system with Bash shell", tag: "lab" },
+      { text: "Lab: Manage files and directories in Linux", tag: "lab" },
+      { text: "Complete: Module 1 & 2 quizzes", tag: "quiz" },
+      { text: "Write Week 4 journal entry", tag: "reading" },
+    ]
+  },
+  {
+    week: 5, dates: "July 7–13", course: "Course 4 (Part 2)", hours: 11, commitment: "~1.6 hrs/day",
+    info: "Finish Course 4 with SQL. Learning to query databases is directly relevant to finance/IT careers — data is everywhere in finance.",
+    tasks: [
+      { text: "Watch: Course 4 — Linux and SQL (Part 3: SQL fundamentals)", tag: "video" },
+      { text: "Watch: Course 4 — Linux and SQL (Part 4: SQL queries for security)", tag: "video" },
+      { text: "Lab: Write SQL queries to retrieve security data", tag: "lab" },
+      { text: "Lab: SQL filters and joins for investigation", tag: "lab" },
+      { text: "Complete: Module 3 & 4 quizzes", tag: "quiz" },
+      { text: "Complete: Course 4 Portfolio Activity — Linux & SQL Tasks", tag: "portfolio" },
+      { text: "Mid-summer check-in: review your progress so far", tag: "reading" },
+      { text: "Write Week 5 journal entry", tag: "reading" },
+    ]
+  },
+  {
+    week: 6, dates: "July 14–20", course: "Course 5 (Part 1)", hours: 10, commitment: "~1.4 hrs/day",
+    info: "Assets, Threats & Vulnerabilities is 19 hrs — split over 2 weeks. This week focuses on asset classification and attack surfaces.",
+    tasks: [
+      { text: "Watch: Course 5 — Assets, Threats & Vulnerabilities (Part 1: Assets)", tag: "video" },
+      { text: "Watch: Course 5 — Assets, Threats & Vulnerabilities (Part 2: Threats)", tag: "video" },
+      { text: "Study: Cryptography basics and how it protects data", tag: "reading" },
+      { text: "Study: Identity and Access Management (IAM) overview", tag: "reading" },
+      { text: "Complete: Module 1 & 2 quizzes", tag: "quiz" },
+      { text: "Write Week 6 journal entry", tag: "reading" },
+    ]
+  },
+  {
+    week: 7, dates: "July 21–27", course: "Course 5 (Part 2)", hours: 9, commitment: "~1.3 hrs/day",
+    info: "Finish Course 5. You'll learn about social engineering and malware — understanding how attacks happen makes you much better at defense.",
+    tasks: [
+      { text: "Watch: Course 5 — Assets, Threats & Vulnerabilities (Part 3: Vulnerabilities)", tag: "video" },
+      { text: "Watch: Course 5 — Assets, Threats & Vulnerabilities (Part 4: Threat modeling)", tag: "video" },
+      { text: "Lab: Vulnerability assessment scenario", tag: "lab" },
+      { text: "Complete: Module 3 & 4 quizzes", tag: "quiz" },
+      { text: "Complete: Course 5 Portfolio Activity — Vulnerability Assessment Report", tag: "portfolio" },
+      { text: "Write Week 7 journal entry", tag: "reading" },
+    ]
+  },
+  {
+    week: 8, dates: "July 28–Aug 3", course: "Course 6", hours: 18, commitment: "~2.6 hrs/day",
+    info: "Heaviest week — 18 hrs of detection and response. You'll use real tools like Splunk. Take breaks and don't rush labs.",
+    tasks: [
+      { text: "Watch: Course 6 — Detection and Response (Part 1: Incident lifecycle)", tag: "video" },
+      { text: "Watch: Course 6 — Detection and Response (Part 2: Network monitoring)", tag: "video" },
+      { text: "Watch: Course 6 — Detection and Response (Part 3: Intrusion detection)", tag: "video" },
+      { text: "Watch: Course 6 — Detection and Response (Part 4: SIEM deep dive)", tag: "video" },
+      { text: "Lab: Analyze packets with network tools", tag: "lab" },
+      { text: "Lab: Use Splunk for SIEM queries", tag: "lab" },
+      { text: "Lab: Chronicle SIEM investigation", tag: "lab" },
+      { text: "Complete: All Module quizzes for Course 6", tag: "quiz" },
+      { text: "Complete: Course 6 Portfolio Activity — Incident Handler's Journal", tag: "portfolio" },
+      { text: "Write Week 8 journal entry", tag: "reading" },
+    ]
+  },
+  {
+    week: 9, dates: "Aug 4–10", course: "Course 7 (Part 1)", hours: 13, commitment: "~1.9 hrs/day",
+    info: "Python time! Course 7 is 25 hrs — split across 2 weeks. This week: learn Python syntax, functions, and how cybersecurity uses automation.",
+    tasks: [
+      { text: "Watch: Course 7 — Automate with Python (Part 1: Python intro)", tag: "video" },
+      { text: "Watch: Course 7 — Automate with Python (Part 2: Python functions)", tag: "video" },
+      { text: "Lab: Write your first Python security script", tag: "lab" },
+      { text: "Lab: Create user-defined functions in Python", tag: "lab" },
+      { text: "Practice: Python data structures (lists, dicts)", tag: "lab" },
+      { text: "Complete: Module 1 & 2 quizzes", tag: "quiz" },
+      { text: "Write Week 9 journal entry", tag: "reading" },
+    ]
+  },
+  {
+    week: 10, dates: "Aug 11–17", course: "Course 7 (Part 2)", hours: 12, commitment: "~1.7 hrs/day",
+    info: "Finish Python with regex, file I/O, and debugging. These skills are highly transferable to data analysis in finance too.",
+    tasks: [
+      { text: "Watch: Course 7 — Automate with Python (Part 3: Regular expressions)", tag: "video" },
+      { text: "Watch: Course 7 — Automate with Python (Part 4: Debugging)", tag: "video" },
+      { text: "Lab: Use regex to parse security logs", tag: "lab" },
+      { text: "Lab: Read/write files with Python for security tasks", tag: "lab" },
+      { text: "Lab: Debug a Python security automation script", tag: "lab" },
+      { text: "Complete: Module 3 & 4 quizzes", tag: "quiz" },
+      { text: "Complete: Course 7 Portfolio Activity — Algorithm for File Updates", tag: "portfolio" },
+      { text: "Write Week 10 journal entry", tag: "reading" },
+    ]
+  },
+  {
+    week: 11, dates: "Aug 18–24", course: "Course 8", hours: 11, commitment: "~1.6 hrs/day",
+    info: "Prepare for cybersecurity jobs — compile your portfolio, practice interviews, and learn how to present your skills professionally.",
+    tasks: [
+      { text: "Watch: Course 8 — Prepare for Jobs (all videos)", tag: "video" },
+      { text: "Compile all Portfolio Activities from Courses 1–7 into one document", tag: "portfolio" },
+      { text: "Write your cybersecurity resume (use course template)", tag: "portfolio" },
+      { text: "Practice: 5 common cybersecurity interview questions", tag: "reading" },
+      { text: "Complete: All Module quizzes for Course 8", tag: "quiz" },
+      { text: "Complete: Course 8 Portfolio Activity — Final incident response showcase", tag: "portfolio" },
+      { text: "Write Week 11 journal entry", tag: "reading" },
+    ]
+  },
+  {
+    week: 12, dates: "Aug 25–31", course: "Course 9 + Finish Line", hours: 6, commitment: "~1 hr/day",
+    info: "Final week! Course 9 is just 6 hours — mostly AI job search tools. Use remaining time to review, celebrate, and plan your next cert.",
+    tasks: [
+      { text: "Complete: Course 9 — Accelerate Job Search with AI (all modules)", tag: "video" },
+      { text: "Set up or update your LinkedIn profile with certificate", tag: "portfolio" },
+      { text: "Add Google Cybersecurity Certificate to LinkedIn", tag: "portfolio" },
+      { text: "Research: CompTIA Security+ exam details and pricing", tag: "reading" },
+      { text: "Research: CompTIA A+ as hardware/infrastructure next step", tag: "reading" },
+      { text: "Write final journal entry — reflect on your whole summer", tag: "portfolio" },
+      { text: "🎉 CLAIM YOUR CERTIFICATE on Coursera!", tag: "portfolio" },
+    ]
+  },
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let state = JSON.parse(localStorage.getItem('cyberState') || '{"tasks":{},"entries":[]}');
+
+function save() { localStorage.setItem('cyberState', JSON.stringify(state)); }
+
+// ─── RENDER SCHEDULE ─────────────────────────────────────────────────────────
+function renderSchedule() {
+  const container = document.getElementById('weekCards');
+  container.innerHTML = '';
+
+  weeks.forEach((w, wi) => {
+    const totalTasks = w.tasks.length;
+    const doneTasks = w.tasks.filter((_, ti) => state.tasks[`${wi}-${ti}`]).length;
+    const pct = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0;
+    const isComplete = pct === 100;
+
+    const card = document.createElement('div');
+    card.className = `week-card${isComplete ? ' complete' : ''}`;
+    card.id = `week-${wi}`;
+
+    card.innerHTML = `
+      <div class="week-header" onclick="toggleWeek(${wi})">
+        <div class="week-meta">
+          <div class="week-badge">WK ${w.week} · ${w.dates}</div>
+          <div>
+            <div class="week-title">${w.course}</div>
+            <div class="week-hours">${w.hours} hrs · ${w.commitment} · ${doneTasks}/${totalTasks} tasks</div>
+          </div>
+        </div>
+        <div class="week-toggle">▾</div>
+      </div>
+      <div class="week-progress-mini">
+        <div class="week-progress-mini-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="week-body">
+        <div class="week-info">${w.info}</div>
+        <ul class="task-list">
+          ${w.tasks.map((t, ti) => {
+            const done = !!state.tasks[`${wi}-${ti}`];
+            return `
+              <li class="task-item${done ? ' done' : ''}" onclick="toggleTask(${wi}, ${ti})">
+                <div class="task-check">
+                  <svg class="checkmark-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="task-text${done ? ' done' : ''}">${t.text}</span>
+                <span class="task-tag tag-${t.tag}">${t.tag}</span>
+              </li>
+            `;
+          }).join('')}
+        </ul>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function toggleWeek(wi) {
+  const card = document.getElementById(`week-${wi}`);
+  card.classList.toggle('open');
+}
+
+function toggleTask(wi, ti) {
+  const key = `${wi}-${ti}`;
+  state.tasks[key] = !state.tasks[key];
+  save();
+  renderSchedule();
+  updateStats();
+  renderOverview();
+}
+
+// ─── STATS ────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const totalTasks = weeks.reduce((a, w) => a + w.tasks.length, 0);
+  const doneTasks = Object.values(state.tasks).filter(Boolean).length;
+  
+  // Estimate hours done based on task completion ratio per week
+  let hoursLogged = 0;
+  weeks.forEach((w, wi) => {
+    const wDone = w.tasks.filter((_, ti) => state.tasks[`${wi}-${ti}`]).length;
+    const ratio = wDone / w.tasks.length;
+    hoursLogged += Math.round(w.hours * ratio);
+  });
+
+  const pct = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0;
+
+  document.getElementById('statDone').textContent = doneTasks;
+  document.getElementById('statTotal').textContent = `of ${totalTasks} total`;
+  document.getElementById('statHours').textContent = hoursLogged;
+  document.getElementById('statEntries').textContent = state.entries.length;
+  document.getElementById('progressPct').textContent = `${pct}%`;
+  document.getElementById('progressFill').style.width = `${pct}%`;
+
+  // Current week (first incomplete)
+  let currentWeek = 12;
+  for (let wi = 0; wi < weeks.length; wi++) {
+    const allDone = weeks[wi].tasks.every((_, ti) => state.tasks[`${wi}-${ti}`]);
+    if (!allDone) { currentWeek = wi + 1; break; }
+  }
+  document.getElementById('statWeek').textContent = currentWeek;
+}
+
+// ─── OVERVIEW ─────────────────────────────────────────────────────────────────
+function renderOverview() {
+  // Course list
+  const cl = document.getElementById('courseList');
+  const totalTasks = weeks.reduce((a, w) => a + w.tasks.length, 0);
+  cl.innerHTML = courses.map((c, i) => {
+    const wi = i <= 6 ? i : i; // map to week index (approximate)
+    // Find week that covers this course
+    const coverWeek = weeks.find(w => w.course.startsWith(`Course ${i+1}`));
+    let status = 'none';
+    if (coverWeek) {
+      const wIdx = weeks.indexOf(coverWeek);
+      const done = weeks[wIdx].tasks.filter((_, ti) => state.tasks[`${wIdx}-${ti}`]).length;
+      if (done === weeks[wIdx].tasks.length && done > 0) status = 'done';
+      else if (done > 0) status = 'partial';
+    }
+    return `<div class="course-pill">
+      <span class="course-pill-name">${i+1}. ${c.name}</span>
+      <span class="course-pill-hours">${c.hours}h</span>
+      <div class="course-pill-status ${status}"></div>
+    </div>`;
+  }).join('');
+
+  // Weekly commitment
+  const wc = document.getElementById('weeklyCommitment');
+  wc.innerHTML = weeks.map(w => `
+    <div class="course-pill">
+      <span class="course-pill-name">Week ${w.week} — ${w.course}</span>
+      <span class="course-pill-hours">${w.commitment}</span>
+    </div>
+  `).join('');
+}
+
+// ─── JOURNAL ──────────────────────────────────────────────────────────────────
+function saveEntry() {
+  const date = document.getElementById('journalDate').value;
+  const week = document.getElementById('journalWeek').value;
+  const mood = document.getElementById('journalMood').value;
+  const text = document.getElementById('journalText').value.trim();
+
+  if (!date || !text) { alert('Please fill in the date and your entry text!'); return; }
+
+  state.entries.unshift({ date, week, mood, text, id: Date.now() });
+  save();
+  document.getElementById('journalText').value = '';
+  renderJournal();
+  updateStats();
+}
+
+function deleteEntry(id) {
+  state.entries = state.entries.filter(e => e.id !== id);
+  save();
+  renderJournal();
+  updateStats();
+}
+
+function renderJournal() {
+  const container = document.getElementById('journalEntries');
+  const noEntries = document.getElementById('noEntries');
+
+  if (state.entries.length === 0) {
+    noEntries.style.display = 'block';
+    container.innerHTML = '';
+    container.appendChild(noEntries);
+    return;
+  }
+
+  noEntries.style.display = 'none';
+  container.innerHTML = state.entries.map(e => `
+    <div class="journal-card">
+      <button class="delete-btn" onclick="deleteEntry(${e.id})">✕</button>
+      <div class="journal-card-header">
+        <div class="journal-date">${e.date}</div>
+        <div class="journal-week-tag">${e.week}</div>
+        <div class="journal-mood">${e.mood}</div>
+      </div>
+      <div class="journal-text">${e.text}</div>
+    </div>
+  `).join('');
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  event.target.classList.add('active');
+}
+
+
+// ─── EXPORT / IMPORT ──────────────────────────────────────────────────────────
+function exportData() {
+  const payload = JSON.stringify(state, null, 2);
+  const blob = new Blob([payload], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `cybersummer-save-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Save file downloaded!');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (typeof imported.tasks !== 'object' || !Array.isArray(imported.entries)) {
+        throw new Error('Invalid file');
+      }
+      state = imported;
+      save();
+      renderSchedule();
+      updateStats();
+      renderOverview();
+      renderJournal();
+      showToast('✓ Progress imported successfully!');
+    } catch {
+      showToast('✗ Invalid save file — try again');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+// Set today's date in journal
+document.getElementById('journalDate').valueAsDate = new Date();
+
+renderSchedule();
+updateStats();
+renderOverview();
+renderJournal();
+</script>
+</body>
+</html>
